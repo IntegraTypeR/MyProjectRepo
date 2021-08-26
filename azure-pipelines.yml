@@ -1,0 +1,83 @@
+trigger:
+- master
+
+pool:
+  vmImage: windows-latest
+
+steps:
+
+- task: PythonScript@0
+  inputs:
+    scriptSource: 'inline'
+    script: |
+      import xml.etree.ElementTree as ET
+      
+      tree = ET.parse('pom.xml')
+      
+      old_version = tree.getroot()[4].text
+      
+      split = old_version.split('.')
+      
+      increase = int(split[len(split)-1]) + 1
+      
+      del split[-1]
+      
+      split.append(str(increase))
+      
+      new_version = ''
+      
+      for i in range(len(split)):
+          if i+1 != len(split):
+              new_version += split[i] + '.'      
+          else:
+              new_version += split[i]
+      
+      #input file
+      #read input file
+      fin = open("pom.xml", "rt")
+      
+      #read file contents to string
+      data = fin.read()
+      
+      #replace all occurrences of the required string
+      data = data.replace(old_version, new_version)
+      
+      #close the input file
+      fin.close()
+      
+      #open the input file in write mode
+      fin = open("pom.xml", "wt")
+      
+      #overrite the input file with the resulting data
+      fin.write(data)
+      
+      #close the file
+      fin.close()
+    workingDirectory: 'my-app'
+
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'my-app/pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'compile'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'my-app'
+    ArtifactName: 'newartifact'
+    publishLocation: 'Container'
+
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'my-app/pom.xml'
+    publishJUnitResults: false
+    javaHomeOption: 'JDKVersion'
+    mavenVersionOption: 'Default'
+    mavenAuthenticateFeed: false
+    effectivePomSkip: false
+    sonarQubeRunAnalysis: false
