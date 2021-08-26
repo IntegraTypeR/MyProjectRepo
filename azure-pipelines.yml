@@ -57,7 +57,7 @@ steps:
 
 - task: Maven@3
   inputs:
-    mavenPomFile: 'MyProjectRepo/my-app/pom.xml'
+    mavenPomFile: 'https://github.com/IntegraTypeR/MyProjectRepo/blob/7d524434e3559d5c5b81df97d80af226d1c4259b/my-app/pom.xml'
     mavenOptions: '-Xmx3072m'
     javaHomeOption: 'JDKVersion'
     jdkVersionOption: '1.8'
